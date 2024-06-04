@@ -1,0 +1,64 @@
+﻿
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Giriş Yap</div>
+                <div class="card-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Kullanıcı Adı</label>
+                            <input type="text" class="form-control" id="username" name="username">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Şifre</label>
+                            <input type="password" class="form-control" id="password" name="password">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Giriş Yap</button>
+                    </form>
+                </div>
+            </div>
+        <div id="result"></div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        var ApiBaseUrl = "@ViewBag.ApiBaseUrl";
+
+        $(document).ready(function () {
+            $('#loginForm').submit(function (e) {
+                e.preventDefault();
+                var formData = {
+                    userName: $('#username').val(),
+                    password: $('#password').val()
+                };
+
+                $.ajax({
+                    type: 'POST',
+                    url: ApiBaseUrl + 'user/SignIn',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (data) {
+                        if (data.status) {
+                            localStorage.setItem("token", data.message);
+                            location.href = "/";
+                        } else {
+                            $("#result")
+                                .show()
+                                .removeClass()
+                                .addClass("alert alert-danger mt-5")
+                                .html(data.message)
+                                .fadeOut(3000);
+
+                        }
+                    },
+                    error: function (e) {
+                        alert(e);
+                    }
+                });
+            });
+        });
+    </script>
+}

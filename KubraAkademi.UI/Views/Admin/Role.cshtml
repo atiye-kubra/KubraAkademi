@@ -1,0 +1,105 @@
+﻿<div class="container">
+    <h1>Rol Yönetimi</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Kullanıcı</th>
+                <th>Mevcut Rol</th>
+                <th>Yeni Rol</th>
+                <th>Aksiyon</th>
+            </tr>
+        </thead>
+        <tbody id="userTable">
+        </tbody>
+    </table>
+</div>
+<div class="modal fade" id="roleModal" tabindex="-1" role="dialog" aria-labelledby="roleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleModalLabel">Change User Role</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="roleForm">
+                    <div class="form-group">
+                        <label for="roleSelect">New Role:</label>
+                        <select class="form-control" id="roleSelect">
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Rol Değiştir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        var ApiBaseUrl = "@ViewBag.ApiBaseUrl";
+
+        if (!userRoles.includes("Admin")) {
+            location.href = "/";
+        }
+
+        var token = localStorage.getItem("token");
+
+        function refreshPage() {
+            location.reload(true);
+        }
+
+        $(document).ready(function () {
+            $.ajax({
+                url: ApiBaseUrl + "role",
+                type: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    // Populate user table
+                    var userTable = $('#userTable');
+                    userTable.empty();
+                    data.users.forEach(function (user) {
+                        var row = $('<tr>');
+                        row.append('<td>' + user.username + '</td>');
+                        row.append('<td>' + user.roleName + '</td>');
+                        var roleOptions = '<td><select class="form-control role-select">';
+                        data.roles.forEach(function (role) {
+                            roleOptions += '<option value="' + role.id + '">' + role.name + '</option>';
+                        });
+                        roleOptions += '</select></td>';
+                        row.append(roleOptions);
+                        row.append('<td><button class="btn btn-primary change-role" data-userid="' + user.userId + '">Rol Değiştir</button></td>');
+                        userTable.append(row);
+                    });
+                },
+                error: function (error) {
+                    console.error("Error creating exam:", error);
+                }
+            });
+
+            $(document).on('click', '.change-role', function () {
+                var userId = $(this).data('userid');
+                var roleId = $(this).closest('tr').find('.role-select').val();
+                $.ajax({
+                    url: ApiBaseUrl + "role/" + userId,
+                    method: 'PUT',
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify({ roleId: roleId }),
+                    success: function () {
+                        refreshPage();
+                    },
+                    error: function () {
+                        alert('Rol değişikliği yapılamadı.');
+                    }
+                });
+            });
+        });
+    </script>
+}                

@@ -1,0 +1,81 @@
+﻿<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Kayıt Ol</div>
+                <div class="card-body">
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Kullanıcı Adı</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fullname" class="form-label">Ad Soyad</label>
+                            <input type="text" class="form-control" id="fullname" name="fullname" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-Posta</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Telefon Numarası</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Şifre</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Kayıt Ol</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+        <script>
+        var ApiBaseUrl = "@ViewBag.ApiBaseUrl";
+
+        $(document).ready(function() {
+            $('#registerForm').submit(function(e) {
+                e.preventDefault();
+
+                var username = $('#username').val();
+                var fullname = $('#fullname').val();
+                var email = $('#email').val();
+                var phone = $('#phone').val();
+                var password = $('#password').val();
+
+                if (!phone.match(/^5\d{9}$/)) {
+                    alert("Telefon numarası '5' ile başlamalı ve 10 karakter olmalıdır.");
+                    return;
+                }
+
+                var formData = {
+                    userName: username,
+                    fullName: fullname,
+                    email: email,
+                    phoneNumber: phone,
+                    password: password
+                };
+
+                $.ajax({
+                    type: 'POST',
+                    url: ApiBaseUrl + 'user/Add',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        console.log(response);
+                        alert("Kayıt başarılı!");
+                        location.href = "/hesap/giris-yap"
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Kayıt başarısız.");
+                    }
+                });
+            });
+        });
+    </script>
+}

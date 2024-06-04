@@ -1,0 +1,63 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="">Eğitim Portalına Hoş Geldiniz!</h1>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-12">
+            <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="true">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="/img/egitim-1.png" class="d-block w-100" alt="...">
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/img/egitim-2.jpeg" class="d-block w-100" alt="...">
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Önceki</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Sonraki</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-12">
+            <hr/>
+        </div>
+        <div class="col-12">
+            <h2 class="fw-bold">İletişim</h2>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-4">
+            <b>Telefon</b><p>+90 (242) 6322</p>
+        </div>
+        <div class="col-4">
+            <b>Adres</b>            <p>Pınarbaşı Mah. Dumlupınar Bulvarı 07070 Kampüs Konyaaltı/Antalya/TÜRKİYE</p>
+            </div>
+        <div class="col-4">
+            <b>Mail</b><p>kubraaltnok@gmail.com</p>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const carousel = new bootstrap.Carousel('#carouselExampleAutoplaying')
+
+    </script>
+}

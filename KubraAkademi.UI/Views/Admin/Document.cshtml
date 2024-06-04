@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Doküman Yükle</title>
+</head>
+<body>
+    <h1>Doküman Yükle</h1>
+
+    <input type="file" id="fileInput">
+    <button onclick="uploadDocument()">Yükle</button>
+
+@section Scripts{
+        <script>
+            function uploadDocument() {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+                if (!file) {
+                    alert('Lütfen bir dosya seçin.');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/api/documents/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Dosya yüklenemedi.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert('Dosya başarıyla yüklendi.');
+                        // İşlem tamamlandığında yapılacak işlemler buraya gelebilir
+                    })
+                    .catch(error => {
+                        alert('Hata: ' + error.message);
+                    });
+            }
+        </script>
+}
+</body>
+</html>

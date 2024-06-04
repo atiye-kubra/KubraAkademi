@@ -1,0 +1,211 @@
+﻿
+
+<div class="container">
+    <div class="row">
+        <div class="col-12 d-flex justify-content-end">
+            <a href="/admin/rol" class="btn btn-primary">Rol Yönetim</a>
+            <a href="/admin/duzenle" class="btn btn-primary ms-2">Düzenle</a>
+        </div>
+    </div>
+        <hr/>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <h3>İçerik Oluştur</h3>
+            <form id="examForm">
+                <div class="form-group">
+                    <label for="examTitle">Başlık</label>
+                    <input type="text" class="form-control" id="examTitle" required>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">İçerik Oluştur</button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <h3>Kategori Oluştur</h3>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label for="examSelect">İçerik seçin</label>
+                    <select class="form-control" id="examSelect" required>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="categoryTitle">Başlık</label>
+                    <input type="text" class="form-control" id="categoryTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="categoryDescription">Açıklama</label>
+                    <textarea class="form-control" id="categoryDescription" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Kategori Oluştur</button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <h3>Video Ekle</h3>
+            <form id="videoForm">
+                <div class="form-group">
+                    <label for="examSelectVideo">İçerik seçin</label>
+                    <select class="form-control" id="examSelectVideo" required>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="categorySelect">Kategori seçin:</label>
+                    <select class="form-control" id="categorySelect" required>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="videoTitle">Başlık</label>
+                    <input type="text" class="form-control" id="videoTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="videoDescription">Açıklama</label>
+                    <input type="text" class="form-control" id="videoDescription" required>
+                </div>
+                <div class="form-group">
+                    <label for="embedUrl">Video Url</label>
+                    <input type="text" class="form-control" id="embedUrl" required>
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="isActive" checked>
+                    <label class="form-check-label" for="isActive">Aktif Mi</label>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Video Ekle</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        var ApiBaseUrl = "@ViewBag.ApiBaseUrl";
+
+        if (!userRoles.includes("Admin")) {
+            location.href = "/";
+        }
+
+        var token = localStorage.getItem("token");
+
+        $(document).ready(function () {
+            // Function to refresh the page after AJAX request
+            function refreshPage() {
+                location.reload(true);
+            }
+
+            // Function to fetch exams and populate dropdowns
+            function fetchExamsAndPopulateDropdowns() {
+                $.get(ApiBaseUrl + "exam", function (data) {
+                    // Populate exam dropdowns
+                    var examSelect = $("#examSelect");
+                    var examSelectVideo = $("#examSelectVideo");
+                    examSelect.empty();
+                    examSelectVideo.empty();
+                    $.each(data, function (index, exam) {
+                        examSelect.append($("<option>").text(exam.title).attr("value", exam.id));
+                        examSelectVideo.append($("<option>").text(exam.title).attr("value", exam.id));
+                    });
+                    var defaultExamId = examSelect.val();
+                    populateCategoriesDropdown(defaultExamId);
+                });
+            }
+
+            // Populate exam dropdowns initially
+            fetchExamsAndPopulateDropdowns();
+
+            // Event handler for creating exam
+            $("#examForm").submit(function (event) {
+                event.preventDefault();
+                var examTitle = $("#examTitle").val();
+                $.ajax({
+                    url: ApiBaseUrl + "exam",
+                    type: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify({ title: examTitle }),
+                    success: function () {
+                        refreshPage();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error creating exam:", error);
+                    }
+                });
+            });
+
+            // Event handler for creating category
+            $("#categoryForm").submit(function (event) {
+                event.preventDefault();
+                var examId = $("#examSelect").val();
+                var categoryTitle = $("#categoryTitle").val();
+                var categoryDescription = $("#categoryDescription").val();
+                $.ajax({
+                    url: ApiBaseUrl + "category",
+                    type: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify({ examId: examId, title: categoryTitle, description: categoryDescription }),
+                    success: function () {
+                        refreshPage();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error creating category:", error);
+                    }
+                });
+            });
+
+            // Event handler for creating video
+            $("#videoForm").submit(function (event) {
+                event.preventDefault();
+                var categoryId = $("#categorySelect").val();
+                var videoTitle = $("#videoTitle").val();
+                var embedUrl = $("#embedUrl").val();
+                var videoDescription = $("#videoDescription").val();
+                var isActive = $("#isActive").is(":checked");
+                $.ajax({
+                    url: ApiBaseUrl + "video",
+                    type: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify({
+                        categoryId: categoryId,
+                        title: videoTitle,
+                        embedUrl: embedUrl,
+                        description: videoDescription,
+                        isActive: isActive
+                    }),
+                    success: function () {
+                        refreshPage();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error creating video:", error);
+                    }
+                });
+            });
+
+            // Event handler for changing exam selection in video form
+
+
+            function populateCategoriesDropdown(examId) {
+                $.get(ApiBaseUrl + "category/by-id?id=" + examId, function (data) {
+                    var categorySelect = $("#categorySelect");
+                    categorySelect.empty();
+                    $.each(data, function (index, category) {
+                        categorySelect.append($("<option>").text(category.title).attr("value", category.id));
+                    });
+                });
+            }
+
+            $("#examSelectVideo").change(function () {
+                var examId = $(this).val();
+                populateCategoriesDropdown(examId);
+            });
+        });
+    </script>
+}

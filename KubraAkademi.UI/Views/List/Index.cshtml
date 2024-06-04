@@ -1,0 +1,63 @@
+﻿@model KubraAkademi.UI.Models.List.ListIndexViewModel
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 fw-bold" id="title"></h1>
+            <h6> Başlamanıza yardımcı olacak kurslar  </h6>
+            <hr />
+        </div>
+    </div>
+    <div class="row" id="list-view">
+    </div>
+    <div class="row" id="no-vid-alert" style="display: none;">
+        <div class="alert alert-danger" role="alert">
+            Bu başlık için video bulunamadı.
+        </div>
+    </div>
+    <hr/>
+    <div id="description"><div/>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var ApiBaseUrl = "@ViewBag.ApiBaseUrl";
+            List();
+
+            function List() {
+                $.ajax({
+                    url: ApiBaseUrl + "video?exam=@Model.Exam&category=@Model.Category",
+                    method: "GET",
+                    contentType: "application/json",
+                    success: function (data) {
+                        var opt = "";
+                        $("#title").text(`${data.examTitle} - ${data.categoryTitle} Videoları`)
+                        $("#list-view").empty();
+                        $("#description").html(data.description)
+                        $.each(data.videos, function (i, item) {
+                            var opt = `
+                                        <a class="col-12 col-md-3  mb-4" href="/liste/@Model.Exam/@Model.Category/${item.id}">
+                                            <img src="https://i.ytimg.com/vi/${item.embedUrl}/hqdefault.jpg" alt="${item.title}" class="img-fluid">
+                                            <div class="fw-bold mt-2 pe-3">${item.title}</div>
+                                            <i class="text-muted">${item.createdBy}</i>
+                                            <div class="text-muted">${item.createDateStr}</div>
+                                            <div class="text-muted">${item.description}</div>
+                                        </a>
+                                    `;
+
+                            $("#list-view").append(opt);
+                        });
+
+                        if (data.videos.length == 0) {
+                            $("#no-vid-alert").show()
+                        }
+
+                    },
+                    error: function () { }
+                });
+            }
+
+        });
+    </script>
+}

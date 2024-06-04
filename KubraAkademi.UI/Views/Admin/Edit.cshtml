@@ -1,0 +1,371 @@
+﻿
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <h3>İçerikler</h3>
+            <ul id="examList" class="ps-0"></ul>
+        </div>
+        <div class="col-md-4">
+            <h3>Kategoriler</h3>
+            <form id="categoryFilterForm">
+                <div class="form-group">
+                    <label for="examSelectCategory">İçerik :</label>
+                    <select class="form-control" id="examSelectCategory" required>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Filtrele</button>
+            </form>
+            <ul id="categoryList" class="ps-0 mt-3"></ul>
+        </div>
+        <div class="col-md-4">
+            <h3>Videolar</h3>
+            <form id="videoFilterForm">
+                <div class="form-group">
+                    <label for="examSelect">İçerik seçin</label>
+                    <select class="form-control" id="examSelect" required>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="categorySelect">Kategori seçin</label>
+                    <select class="form-control" id="categorySelect" required>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Filtrele</button>
+            </form>
+            <ul id="videoList" class="ps-0 mt-4"></ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        var ApiBaseUrl = "@ViewBag.ApiBaseUrl";
+
+        if (!userRoles.includes("Admin")) {
+            location.href = "/";
+        }
+
+        var token = localStorage.getItem("token");
+
+        function refreshPage() {
+            location.reload(true);
+        }
+
+        $(document).ready(function () {
+            function fetchExamsAndPopulateDropdown() {
+
+                $.get(ApiBaseUrl + "exam", function (data) {
+                    var examSelectCategory = $("#examSelectCategory");
+                    var examSelectVideo = $("#examSelectVideo");
+                    examSelectCategory.empty();
+                    examSelectVideo.empty();
+                    $.each(data, function (index, exam) {
+                        examSelectCategory.append($("<option>").text(exam.title).attr("value", exam.id));
+                        examSelectVideo.append($("<option>").text(exam.title).attr("value", exam.id));
+                    });
+                });
+            }
+
+            function fetchCategoriesAndPopulateDropdown(examId) {
+                $.get(ApiBaseUrl + "category/by-id?id=" + examId, function (data) {
+                    var categoryList = $("#categoryList");
+                    categoryList.empty();
+                    $.each(data, function (index, category) {
+                        var li = $("<li>").addClass("list-group-item d-flex justify-content-between align-items-center").text(category.title);
+
+                        var buttonGroup = $("<div>").addClass("btn-group");
+                        var deleteButton = $("<button>").addClass("btn btn-outline-danger btn-sm").attr("type", "button").text("Sil");
+                        deleteButton.click(function () {
+                            deleteCategory(category.id);
+                        });
+                        var updateButton = $("<button>").addClass("btn btn-outline-primary btn-sm").attr("type", "button").text("Güncelle");
+                        updateButton.click(function () {
+                            var newTitle = prompt("Yeni kategori başlığı girin:", category.title);
+                            if (newTitle !== null && newTitle.trim() !== "") {
+                                var newDescription = prompt("Yeni kategori açıklaması girin:", category.description);
+                                if (newDescription !== null && newDescription.trim() !== "") {
+                                    updateCategory(category.id, newTitle.trim(), newDescription.trim())
+                                }
+                            }
+                        });
+                        buttonGroup.append(deleteButton);
+                        buttonGroup.append(updateButton);
+
+                        li.append(buttonGroup);
+                        categoryList.append(li);
+                    });
+
+
+                });
+            }
+
+            function fetchCategoriesAndPopulateVideoCategoryDropdown(examId) {
+                $.get(ApiBaseUrl + "category/by-id?id=" + examId, function (data) {
+                    var categorySelect = $("#categorySelect");
+                    categorySelect.empty();
+                    $.each(data, function (index, category) {
+                        categorySelect.append($("<option>").text(category.title).attr("value", category.path));
+                    });
+
+                });
+            }
+
+
+            function fetchAndDisplayExams() {
+                $.get(ApiBaseUrl + "exam", function (data) {
+                    var examList = $("#examList");
+                    var examSelect = $("#examSelect");
+                    examList.empty();
+                    $.each(data, function (index, exam) {
+                        var inputGroup = $("<div>").addClass("input-group");
+                        var input = $("<input>").addClass("form-control").attr("type", "text").attr("placeholder", "Exam title").val(exam.title);
+                        var deleteButton = $("<button>").addClass("btn btn-outline-danger").attr("type", "button").text("Sil");
+                        deleteButton.click(function () {
+                            deleteExam(exam.id);
+                        });
+                        var updateButton = $("<button>").addClass("btn btn-outline-primary").attr("type", "button").text("Güncelle");
+                        updateButton.click(function () {
+                            var newTitle = prompt("Yeni İçerik başlığı girin:", exam.title);
+                            if (newTitle !== null && newTitle.trim() !== "") {
+                                updateExam(exam.id, newTitle.trim());
+                            }
+                        });
+                        inputGroup.append(input);
+                        inputGroup.append(deleteButton);
+                        inputGroup.append(updateButton);
+
+                        examList.append(inputGroup);
+                        examSelect.append($("<option>").text(exam.title).attr("value", exam.path).attr("idx", exam.id));
+
+
+                    });
+                    fetchCategoriesAndPopulateVideoCategoryDropdown(data[0].id)
+                });
+            }
+
+            function fetchAndDisplayCategories() {
+                $.get(ApiBaseUrl + "categories", function (data) {
+                    var categoryList = $("#categoryList");
+                    categoryList.empty();
+                    $.each(data, function (index, category) {
+                        var li = $("<li>").text(category.title);
+                        var deleteButton = $("<button>").text("Sil").addClass("btn btn-danger btn-sm ml-2");
+                        deleteButton.click(function () {
+                            deleteCategory(category.id);
+                        });
+                        var updateButton = $("<button>").text("Güncelle").addClass("btn btn-primary btn-sm ml-2");
+                        updateButton.click(function () {
+                            var newTitle = prompt("Enter new title for category:", category.title);
+                            if (newTitle !== null && newTitle.trim() !== "") {
+                                updateCategory(category.id, newTitle.trim());
+                            }
+                        });
+                        li.append(deleteButton);
+                        li.append(updateButton);
+                        categoryList.append(li);
+                    });
+                });
+            }
+
+            function fetchAndDisplayVideos(examId, categoryId) {
+                var url = "video";
+                if (examId && categoryId) {
+                    url += "?exam=" + examId + "&category=" + categoryId;
+                }
+                $.get(ApiBaseUrl + url, function (data) {
+                    var videoList = $("#videoList");
+                    videoList.empty();
+                    $.each(data.videos, function (index, video) {
+                        var checkbox = $("<input>").attr("type", "checkbox").prop("checked", video.isActive);
+                        var checkboxLabel = $("<label>").addClass("form-check-label").append(checkbox);
+                        var checkboxWrapper = $("<div>").addClass("form-check").append(checkboxLabel).append(" IsActive");
+                        var deleteButton = $("<button>").text("Sil").addClass("btn btn-danger ml-2");
+                        deleteButton.click(function () {
+                            deleteVideo(video.id);
+                        });
+                        var updateButton = $("<button>").text("Güncelle").addClass("btn btn-primary ms-2");
+                        updateButton.click(function () {
+                            var newTitle = prompt("Yeni video başlığını girin:", video.title);
+                            if (newTitle !== null && newTitle.trim() !== "") {
+                                var newDescription = prompt("Yeni video açıklaması girin:", video.description);
+                                if (newDescription !== null && newDescription.trim() !== "") {
+
+                                var newEmbedUrl = prompt("Yeni video url giriniz:", video.embedUrl);
+                                if (newEmbedUrl !== null && newEmbedUrl.trim() !== "") {
+                                    var newIsActive = confirm("Video aktif mi?");
+                                    updateVideo(video.id, newTitle.trim(), newEmbedUrl.trim(), newIsActive, newDescription.trim());
+                                }
+                                }
+                            }
+                        });
+
+                        var opt = `
+                                    <a class="col-12 col-md-3 mb-4" href="https://www.youtube.com/watch?v=${video.embedUrl}" target="_blank">
+                                <img src="https://i.ytimg.com/vi/${video.embedUrl}/hqdefault.jpg" alt="${video.title}" class="img-fluid mt-3">
+                                <div class="fw-bold mt-2 pe-3">${video.title}</div>
+                                <div class="text-muted">${video.createDateStr}</div>
+                            </a>
+                        `;
+
+                        videoList.append(opt);
+
+                        videoList.append(deleteButton);
+                        videoList.append(updateButton);
+                    });
+                });
+            }
+
+            $("#examSelect").change(function () {
+                var selectedOption = $(this).find(":selected");
+                var idxValue = selectedOption.attr("idx");
+                fetchCategoriesAndPopulateVideoCategoryDropdown(idxValue);
+            });
+
+            function deleteExam(examId) {
+                if (confirm("Silmek istediğinize emin misiniz?")) {
+                    $.ajax({
+                        url: ApiBaseUrl + "exam/" + examId,
+                        type: "DELETE",
+                        headers: {
+                            "Authorization": "Bearer " + token,
+                        },
+                        success: function () {
+                            refreshPage();
+                        },
+                        error: function (e) {
+                            if (e.status == 401) {
+                                localStorage.removeItem("token");
+                                location.href = "/";
+                            }
+                        }
+                    });
+                }
+            }
+
+            $("#categoryFilterForm").submit(function (event) {
+                event.preventDefault();
+                var examId = $("#examSelectCategory").val();
+                fetchCategoriesAndPopulateDropdown(examId);
+            });
+
+            function deleteCategory(categoryId) {
+                if (confirm("Silmek istediğinize emin misiniz?")) {
+                    $.ajax({
+                        url: ApiBaseUrl + "category/" + categoryId,
+                        type: "DELETE",
+                        headers: {
+                            "Authorization": "Bearer " + token,
+                        },
+                        success: function () {
+                            refreshPage();
+                        },
+                        error: function (e) {
+                            if (e.status == 401) {
+                                localStorage.removeItem("token");
+                                location.href = "/";
+                            }
+                        }
+                    });
+                }
+            }
+
+            function deleteVideo(videoId) {
+                if (confirm("Silmek istediğinize emin misiniz?")) {
+                    $.ajax({
+                        url: ApiBaseUrl + "video/" + videoId,
+                        type: "DELETE",
+                        headers: {
+                            "Authorization": "Bearer " + token,
+                        },
+                        success: function () {
+                            refreshPage();
+                        },
+                        error: function (e) {
+                            if (e.status == 401) {
+                                localStorage.removeItem("token");
+                                location.href = "/";
+                            }
+                        }
+                    });
+                }
+            }
+
+            function updateExam(examId, newTitle) {
+                $.ajax({
+                    url: ApiBaseUrl + "exam/" + examId,
+                    type: "PUT",
+                    contentType: "application/json",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                    },
+                    data: JSON.stringify({ title: newTitle }),
+                    success: function () {
+                        fetchAndDisplayExams();
+                    },
+                    error: function (e) {
+                        if (e.status == 401) {
+                            localStorage.removeItem("token");
+                            location.href = "/";
+                        }
+                    }
+                });
+            }
+
+            function updateCategory(categoryId, newTitle, newDescription) {
+                $.ajax({
+                    url: ApiBaseUrl + "category/" + categoryId,
+                    type: "PUT",
+                    contentType: "application/json",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                    },
+                    data: JSON.stringify({ title: newTitle, description: newDescription }),
+                    success: function () {
+                        fetchAndDisplayCategories();
+                    },
+                    error: function (e) {
+                        if (e.status == 401) {
+                            localStorage.removeItem("token");
+                            location.href = "/";
+                        }
+                    }
+                });
+            }
+
+            function updateVideo(videoId, newTitle, newEmbedUrl, newIsActive, newDescription) {
+                $.ajax({
+                    url: ApiBaseUrl + "video/" + videoId,
+                    type: "PUT",
+                    contentType: "application/json",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                    },
+                    data: JSON.stringify({ title: newTitle, embedUrl: newEmbedUrl, isActive: newIsActive, description: newDescription }),
+                    success: function () {
+                        var examId = $("#examSelect").val();
+                        var categoryId = $("#categorySelect").val();
+                        fetchAndDisplayVideos(examId, categoryId);
+                    },
+                    error: function (e) {
+                        if (e.status == 401) {
+                            localStorage.removeItem("token");
+                            location.href = "/";
+                        }
+                    }
+                });
+            }
+
+            $("#videoFilterForm").submit(function (event) {
+                event.preventDefault();
+                var examId = $("#examSelect").val();
+                var categoryId = $("#categorySelect").val();
+                fetchAndDisplayVideos(examId, categoryId);
+            });
+
+            fetchExamsAndPopulateDropdown();
+            fetchAndDisplayExams();
+            fetchAndDisplayCategories();
+            fetchAndDisplayVideos();
+        });
+    </script>
+}                

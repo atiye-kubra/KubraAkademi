@@ -1,0 +1,44 @@
+﻿@model KubraAkademi.UI.Models.List.ListVideoViewModel
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 fw-bold" id="title"></h1>
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="videoWrapper">
+                <iframe id="vid-item" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div class="documentWrapper">
+                <iframe id="doc-item" src="" style="width:600px; height:500px;" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var ApiBaseUrl = "@ViewBag.ApiBaseUrl";
+            GetVideo();
+
+            function GetVideo() {
+                $.ajax({
+                    url: ApiBaseUrl + "video/get-by-id?id=@Model.VideoId",
+                    method: "GET",
+                    contentType: "application/json",
+                    success: function (data) {
+                        $("#title").text(data.title)
+                        $("#vid-item").attr("src", "https://www.youtube.com/embed/" + data.embedUrl)
+                    },
+                    error: function () { }
+                });
+            }
+
+        });
+    </script>
+}
